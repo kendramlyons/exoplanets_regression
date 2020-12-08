@@ -14,9 +14,9 @@ import statsmodels.api as sm
 import matplotlib.pyplot as plt
 # import * from proj_script
 
-def read_black_holes():
-    black_holes = pd.read_csv('https://raw.githubusercontent.com/eventhorizontelescope/2019-D01-01/master/csv/SR1_M87_2017_095_hi_hops_netcal_StokesI.csv', header=1)
-    return black_holes
+# def read_black_holes():
+#     black_holes = pd.read_csv('https://raw.githubusercontent.com/eventhorizontelescope/2019-D01-01/master/csv/SR1_M87_2017_095_hi_hops_netcal_StokesI.csv', header=1)
+#     return black_holes
 
 def read_exoplanets():
     '''
@@ -28,28 +28,42 @@ def read_exoplanets():
     
 def get_candidates(epdf):
     '''
-    Makes a DataFrame with data for all KOI Candidates
+    Makes a DataFrame with data for all KOI Candidates.
     '''
     cds = epdf.loc[epdf.koi_pdisposition == 'CANDIDATE']
     return cds
     
 def get_false_positives(epdf):
     '''
-    Makes a DataFrame with data for all KOI False Positives
+    Makes a DataFrame with data for all KOI False Positives.
     '''
     fps = epdf.loc[epdf.koi_pdisposition == 'FALSE POSITIVE']
     return fps
 
 def koi_score_frequency(cds, fps):
     '''
+    Makes a histogram showing frequency and estimated probability density for KOI scores
+    of candidates and false positives. 
     '''
-    ax1 = plt.hist(cds.koi_score, bins = 10, alpha = .5, ec = 'green', color = 'lightgreen', label = 'Candidates')
-    ax2 = plt.hist(fps.koi_score, bins = 10, alpha = .5, ec = 'orange', color = 'gold', label = 'False Positives')
-    # ax3 = ax1.twinx()
-    plt.xlabel('KOI Score', labelpad = 5, fontsize = 20)
-    plt.ylabel('Frequency', labelpad = 5, fontsize = 20)
-    plt.title('KOI Score Frequency Distribution', pad = 10, fontsize = 24)
-    plt.legend(loc = 'center', title = 'KOI Disposition')
+    bins = np.arange(0, 1.1, .1)
+    ax = cds.koi_score.plot.hist(bins = bins, alpha = .1, ec = 'green', color = 'lightgreen', 
+                                 label = 'Candidate', figsize=(6,4))
+    fps.koi_score.plot.hist(bins = bins, alpha = .1, ec = 'orange', color = 'gold', 
+                            label = 'False Positive')
+    plt.xticks(fontsize = 16)
+    plt.yticks(fontsize = 16)
+    ax2= ax.twinx()
+    cds.koi_score.plot.hist(ax = ax2, bins = bins, alpha = .4, density = True, ec = 'blue', 
+                            color = 'lightgreen', label = 'Candidate')
+    fps.koi_score.plot.hist(ax = ax2, bins = bins, alpha = .4, density = True, ec = 'red', 
+                            color = 'gold', label = 'False Positive')
+    legend = plt.legend(loc = 'center', title = "KOI Disposition", fontsize = 12)
+    plt.setp(legend.get_title(),fontsize='large')
+    ax.set_xlabel('KOI Score', labelpad = 10, fontsize = 20)
+    plt.title('KOI Score Frequency Distribution', pad = 15, fontsize = 24)
+    plt.yticks(fontsize = 16)
+    ax2.set_ylabel('Est. Prob. Density', fontsize = 20, labelpad = 20)
+    ax.set_ylabel('Frequency', fontsize=20, labelpad = 15)
 
 def koi_score_v_period(cds, fps):
     '''
@@ -59,15 +73,16 @@ def koi_score_v_period(cds, fps):
     cds_score = cds.loc[:, 'koi_score']
     fps_period = fps.loc[:, 'koi_period']
     fps_score = fps.loc[:, 'koi_score']
-    plt.scatter(cds_period, cds_score, marker = 'o', color = 'green', alpha = .2, label = 'Candidates')
-    plt.scatter(fps_period, fps_score, marker = 'o', color = 'orange', alpha = .2, label = 'False Positives')
-    plt.xlim(0,700)
+    plt.scatter(cds_period, cds_score, marker = 'o', color = 'green', alpha = .2, label = 'Candidate')
+    plt.scatter(fps_period, fps_score, marker = 'o', color = 'orange', alpha = .2, label = 'False Positive')
+    plt.xlim(0, 700)
     plt.xlabel('Orbital Period in Days', labelpad = 5, fontsize = 20)
     plt.ylabel('KOI Score', labelpad = 5, fontsize = 20)
     plt.title('KOI Score by Planetary Orbital Period', pad = 10, fontsize = 24)
-    plt.legend(title = 'KOI Disposition')
-    df = pd.concat([cds_period, cds_score], axis = 1)
-    df = df.dropna()
+    plt.xticks(fontsize = 16)
+    plt.yticks(fontsize = 16)
+    legend = plt.legend(title = "KOI Disposition", fontsize = 12)
+    plt.setp(legend.get_title(),fontsize = 'large')
     #candidates linear regression line
     cds_df = pd.concat([cds_period, cds_score], axis = 1)
     cds_df = cds_df.dropna()
@@ -95,13 +110,16 @@ def koi_score_v_radius(cds, fps):
     cds_score = cds.loc[:, 'koi_score']
     fps_radius = fps.loc[:, 'koi_prad']
     fps_score = fps.loc[:, 'koi_score']
-    plt.scatter(cds_radius, cds_score, marker = 'o', color = 'green', alpha = .2, label = 'Candidates')
-    plt.scatter(fps_radius, fps_score, marker = 'o', color = 'orange', alpha = .2, label = 'False Positives')
+    plt.scatter(cds_radius, cds_score, marker = 'o', color = 'green', alpha = .2, label = 'Candidate')
+    plt.scatter(fps_radius, fps_score, marker = 'o', color = 'orange', alpha = .2, label = 'False Positive')
     plt.xlim(0, 500)
     plt.xlabel('Planetary Radius in Earth Radii', labelpad = 5, fontsize = 20)
-    plt.ylabel('KOI Score', labelpad = 5, fontsize = 20)
+    plt.ylabel('KOI Score', labelpad=5, fontsize = 20)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     plt.title('KOI Score by Planetary Radius', pad = 10, fontsize = 24)
-    plt.legend(title = 'KOI Disposition')
+    legend = plt.legend(title = "KOI Disposition", fontsize = 12)
+    plt.setp(legend.get_title(),fontsize='large')
     #candidates linear regression line
     cds_df2 = pd.concat([cds_radius, cds_score], axis = 1)
     cds_df2 = cds_df2.dropna()
